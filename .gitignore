@@ -1,3 +1,6 @@
 tmp/
 log/
 redhat/rpms
+
+# Data directory used for local testing
+data/
