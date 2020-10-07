@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Export all OpenShift objects before backup
+# Export all K8s objects before backup
 #
 # == Authors
 #
@@ -16,12 +16,12 @@ set -e -u -o pipefail
 # sysexit.h
 readonly EX_PROTOCOL=76
 
-readonly min_expected_kinds=110
+readonly min_expected_kinds=98
 
-default_output_dir=/var/lib/openshift-backup
+default_output_dir=/data/k8s-backup
 
-if ! oc_binary=$(type -p oc); then
-  echo "OpenShift client \"oc\" not found in PATH" >&2
+if ! kubectl=$(type -p kubectl); then
+  echo "K8s client \"kubectl\" not found in PATH" >&2
   exit 1
 fi
 
@@ -84,20 +84,20 @@ delay_attempt() {
   sleep "$delay" || :
 }
 
-run_oc() {
-  "$oc_binary" ${opt_verbose:+--loglevel=10} "$@"
+run_kubectl() {
+  "$kubectl" ${opt_verbose:+--v=10} "$@"
 }
 
 #
 # Capture output of "oc" command in destination file
 #
-capture_oc() {
+capture_kubectl() {
   local destfile="$1"; shift
   local attempt
   local status
 
   for ((attempt=0; ; ++attempt)); do
-    if run_oc "$@" > "$destfile"; then
+    if run_kubectl "$@" > "$destfile"; then
       return 0
     else
       status=$?
@@ -107,7 +107,7 @@ capture_oc() {
       fi
 
       delay_attempt "$attempt" \
-        "oc failed with exit status ${status} (arguments: $*)"
+        "kubectl failed with exit status ${status} (arguments: $*)"
     fi
   done
 
@@ -137,39 +137,25 @@ extract_versioned_apis() {
 
 validate_kinds() {
   local -a expected=(
-    buildconfigs
-    builds
     configmaps
-    cronjobs
     daemonsets
-    deploymentconfigs
     deployments
     endpoints
-    groups
     horizontalpodautoscalers
-    imagestreams
-    imagestreamtags
     ingresses
     jobs
     limitranges
     namespaces
     nodes
-    oauthaccesstokens
-    oauthclients
     persistentvolumeclaims
     persistentvolumes
-    projects
     replicasets
-    replicationcontrollers
     resourcequotas
-    rolebindings
     roles
-    routes
     secrets
     serviceaccounts
     services
     statefulsets
-    users
   )
 
   local missing=()
@@ -197,17 +183,14 @@ validate_kinds() {
 }
 
 #
-# Peruse Kubernetes and OpenShift API to gather list of known types
+# Peruse Kubernetes API to gather list of known types
 #
 object_kinds() {
   # Kubernetes legacy v1 API
-  capture_oc "${output_dir}/k8s-api.json" get --raw /api
+  capture_kubectl "${output_dir}/k8s-api.json" get --raw /api
 
   # Kubernetes APIs
-  capture_oc "${output_dir}/k8s-apis.json" get --raw /apis
-
-  # OpenShift API
-  capture_oc "${output_dir}/openshift-oapi.json" get --raw /oapi
+  capture_kubectl "${output_dir}/k8s-apis.json" get --raw /apis
 
   # Process API groups
   extract_group_versions /apis \
@@ -216,15 +199,11 @@ object_kinds() {
   extract_versioned_apis /api \
     < "${output_dir}/k8s-api.json" \
     > "${output_dir}/k8s-api.groups.json"
-  extract_versioned_apis /oapi \
-    < "${output_dir}/openshift-oapi.json" \
-    > "${output_dir}/openshift-oapi.groups.json"
 
   # Combine groups
   jq --slurp --raw-output 'sort | unique | @sh' \
     "${output_dir}/k8s-apis.groups.json" \
     "${output_dir}/k8s-api.groups.json" \
-    "${output_dir}/openshift-oapi.groups.json" \
     > "${output_dir}/api-groups.txt"
 
   eval "local -a groups=( $(< "${output_dir}/api-groups.txt") )"
@@ -237,7 +216,7 @@ object_kinds() {
     local name="api-${san_name}.json"
     local fname="${output_dir}/${name}"
 
-    capture_oc "$fname" get --raw "$url"
+    capture_kubectl "$fname" get --raw "$url"
 
     files+=( "$fname" )
   done
@@ -258,23 +237,13 @@ retrievable_kind() {
     # These are known to not work
     *reviews | \
     bindings | \
-    deploymentconfigrollbacks | \
-    imagesignatures | \
-    imagestreamimages | \
-    imagestreamimports | \
-    imagestreammappings | \
-    useridentitymappings | \
-    mutations | \
-    validations)
+    *validators | \
+    validations | \
+    *mutators | \
+    mutations)
       return 1
       ;;
 
-    # Removed in OpenShift 3.11
-    processedtemplates)
-      if check_version '<' 1 11; then
-        return 1
-      fi
-      ;;
   esac
 
   return 0
@@ -293,7 +262,7 @@ fetch_objects() {
   local error=
 
   # Capture stderr
-  if error=$(run_oc get --all-namespaces --output=json "$kind" 2>&1 >"$destfile" | tee -a /dev/stderr); then
+  if error=$(run_kubectl get --all-namespaces --output=json "$kind" 2>&1 >"$destfile" | tee -a /dev/stderr); then
     if objcount=$(jq --raw-output '.items | length' < "$destfile"); then
       echo "Received ${objcount} ${kind} objects" >&2
       return 0
@@ -304,7 +273,7 @@ fetch_objects() {
     local errprefix=
 
     if verbose; then
-      echo "OpenShift client failed with status ${status}" >&2
+      echo "Kubernetes client failed with status ${status}" >&2
       errprefix='[^]]+ *[-_a-z0-9]+\.go:[0-9]+] *'
     fi
 
@@ -314,6 +283,7 @@ fetch_objects() {
       -e "^${errprefix}the server does not allow this method on the requested resource\$" \
       -e "^${errprefix}Unable to list \"${kind}\": the server could not find the requested resource\$" \
       -e "^${errprefix}Unable to list {\".*\" \"v1\" \"${kind}\"}: the server could not find the requested resource\$" \
+      -e "^${errprefix}Unable to list \".*/v1, Resource=${kind}\": the server could not find the requested resource\$" \
       -e "^${errprefix}the server doesn't have a resource type \"${kind}\"\$" \
       <<< "$error"
     then
@@ -370,7 +340,7 @@ split_objects() {
 
   echo "Splitting ${#} JSON files" >&2
 
-  if /usr/bin/krossa "$splitdir" "$@"; then
+  if krossa "$splitdir" "$@"; then
     # Remove empty directories
     find "$splitdir" -type d -empty -delete
 
@@ -381,7 +351,7 @@ split_objects() {
 }
 
 #
-# Compare against OpenShift version
+# Compare against Kubernetes version
 #
 # Arguments:
 # op: jq comparison operator (==, <, <=, >, >=)
@@ -403,19 +373,21 @@ check_version() {
 }
 
 # Collect all output
-exec 9> >(exec ts '%FT%T%z' > "${output_dir}/log")
-exec > >(exec tee -a /dev/fd/9 >&1)
-exec 2> >(exec tee -a /dev/fd/9 >&2)
+## save original stdout for dumping tar in the end
+#exec 100>&1
+## Collect all output in log file
+#exec 9> >(exec ts '%FT%T%z' > "${output_dir}/log")
+#exec > >(exec tee -a /dev/fd/9 >&1)
+#exec 2> >(exec tee -a /dev/fd/9 >&2)
 
 date > "${output_dir}/timestamp-begin.txt"
 
-capture_oc "${output_dir}/version.txt" version
+capture_kubectl "${output_dir}/version.txt" version
 
-capture_oc "${output_dir}/version.json" get --raw /version
-capture_oc "${output_dir}/version-openshift.json" get --raw /version/openshift
+capture_kubectl "${output_dir}/version.json" get --raw /version
 
 if check_version '<' 1 7; then
-  echo "OpenShift 3.7 or newer required" >&2
+  echo "Kubernetes 1.7 or newer required" >&2
   exit 1
 fi
 
@@ -498,7 +470,7 @@ if (( errors > 0 )); then
   exit 1
 fi
 
-echo 'OpenShift backup finished without errors' >&2
+echo 'K8s backup finished without errors' >&2
 
 exit 0
 
