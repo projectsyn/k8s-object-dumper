@@ -372,14 +372,6 @@ check_version() {
     > /dev/null
 }
 
-# Collect all output
-## save original stdout for dumping tar in the end
-#exec 100>&1
-## Collect all output in log file
-#exec 9> >(exec ts '%FT%T%z' > "${output_dir}/log")
-#exec > >(exec tee -a /dev/fd/9 >&1)
-#exec 2> >(exec tee -a /dev/fd/9 >&2)
-
 date > "${output_dir}/timestamp-begin.txt"
 
 capture_kubectl "${output_dir}/version.txt" version
@@ -471,6 +463,12 @@ if (( errors > 0 )); then
 fi
 
 echo 'K8s backup finished without errors' >&2
+
+# Output for K8up
+( cd "${output_dir}/split" && tar czf ${output_dir}/k8s-objects.tar * )
+
+# dump tar to original stdout
+cat "${output_dir}/k8s-objects.tar" >&1
 
 exit 0
 
