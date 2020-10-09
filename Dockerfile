@@ -1,4 +1,4 @@
-FROM debian:10.5-slim as base
+FROM docker.io/debian:10.5-slim as base
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
@@ -7,7 +7,7 @@ RUN apt-get update \
      less \
      moreutils \
      procps \
-  && apt-get clean
+  && rm -rf /var/lib/apt/lists/*
 
 FROM base as downloader
 
@@ -15,7 +15,7 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends \
      ca-certificates \
      curl \
-  && apt-get clean
+  && rm -rf /var/lib/apt/lists/*
 
 RUN curl -sLo /tmp/kubectl "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl" \
   && chmod +x /tmp/kubectl

@@ -465,10 +465,10 @@ fi
 echo 'K8s backup finished without errors' >&2
 
 # Output for K8up
-( cd "${output_dir}/split" && tar czf ${output_dir}/k8s-objects.tar * )
+( cd "${output_dir}/split" && tar czf ${output_dir}/k8s-objects.tar.gz * )
 
 # dump tar to original stdout
-cat "${output_dir}/k8s-objects.tar" >&1
+cat "${output_dir}/k8s-objects.tar.gz" >&1
 
 exit 0
 
