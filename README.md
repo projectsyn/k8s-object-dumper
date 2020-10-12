@@ -1,17 +1,12 @@
-# openshift-pre-backup
+# K8s Object Dumper
 
-Export all OpenShift objects before backup.
+K8s Object Dumper allows to collect all objects from Kubernetes and write them into files.
+It is written to be used as a pre backup command for [K8up](https://k8up.io).
 
+This repository is part of Project Syn.
+For documentation on Project Syn and this component, see https://syn.tools.
 
-## Developing
+## Contributing and license
 
-1. Hack
-2. `./openshift-pre-backup -v -d ./tmp`
-
-
-### Building
-
-    docker run -it --rm \
-      -v "$(pwd)":/home/builder/rpmbuild/SOURCES \
-      mhutter/rpmbuild \
-      rpmbuild -bb rpmbuild/SPECS/openshift-pre-backup.spec
+This library is licensed under [BSD-3-Clause](LICENSE).
+For information about how to contribute see [CONTRIBUTING](CONTRIBUTING.md).
