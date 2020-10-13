@@ -33,6 +33,8 @@ RUN mkdir /data \
 COPY --from=downloader /tmp/kubectl /usr/local/bin
 COPY --from=downloader /tmp/krossa/krossa /usr/local/bin
 COPY dump-objects /usr/local/bin
+COPY must-exist /usr/local/share/k8s-object-dumper/
+COPY known-to-fail /usr/local/share/k8s-object-dumper/
 
 USER 1001
 ENTRYPOINT ["/usr/local/bin/dump-objects"]
