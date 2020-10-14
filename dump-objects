@@ -130,28 +130,7 @@ extract_versioned_apis() {
 }
 
 validate_kinds() {
-  local -a expected=(
-    configmaps
-    daemonsets
-    deployments
-    endpoints
-    horizontalpodautoscalers
-    ingresses
-    jobs
-    limitranges
-    namespaces
-    nodes
-    persistentvolumeclaims
-    persistentvolumes
-    replicasets
-    resourcequotas
-    roles
-    secrets
-    serviceaccounts
-    services
-    statefulsets
-  )
-
+  local -a expected=( $(< /usr/local/share/k8s-object-dumper/must-exist) )
   local missing=()
   for j in "${expected[@]}"; do
     local found=
@@ -225,20 +204,14 @@ object_kinds() {
 #
 #
 retrievable_kind() {
-  local kind="$1"
+  local -a known_to_fail=( $(< /usr/local/share/k8s-object-dumper/known-to-fail) )
 
-  case "$kind" in
-    # These are known to not work
-    *reviews | \
-    bindings | \
-    *validators | \
-    validations | \
-    *mutators | \
-    mutations)
+  for kind in "${known_to_fail[@]}"
+  do
+    if [[ "$1" =~ ^${kind}$ ]]; then
       return 1
-      ;;
-
-  esac
+    fi
+  done
 
   return 0
 }

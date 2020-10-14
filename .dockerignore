@@ -1,2 +1,4 @@
 *
 !dump-objects
+!known-to-fail
+!must-exist
