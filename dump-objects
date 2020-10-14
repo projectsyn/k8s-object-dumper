@@ -424,18 +424,19 @@ fi
 
 date > "${output_dir}/timestamp-end.txt"
 
-if (( errors > 0 )); then
-  echo "Encountered ${errors} error(s) while backing up data" >&2
-  exit 1
-fi
-
-echo 'K8s backup finished without errors' >&2
 
 # Output for K8up
 ( cd "${output_dir}/split" && tar czf ${output_dir}/k8s-objects.tar.gz * )
 
 # dump tar to original stdout
 cat "${output_dir}/k8s-objects.tar.gz" >&1
+
+if (( errors > 0 )); then
+  echo "Encountered ${errors} error(s) while backing up data" >&2
+  exit 1
+fi
+
+echo 'K8s backup finished without errors' >&2
 
 exit 0
 
