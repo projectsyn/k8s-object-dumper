@@ -426,7 +426,7 @@ date > "${output_dir}/timestamp-end.txt"
 
 
 # Output for K8up
-( cd "${output_dir}/split" && tar czf ${output_dir}/k8s-objects.tar.gz * )
+( cd "${output_dir}" && tar czf ${output_dir}/k8s-objects.tar.gz timestamp-*.txt version.* objects-*.json split/ )
 
 # dump tar to original stdout
 cat "${output_dir}/k8s-objects.tar.gz" >&1
