@@ -8,8 +8,8 @@ For documentation on Project Syn, see https://syn.tools.
 
 K8s Object Dumper consists of a shell script.
 This script uses the Kubernetes API to list each and every API and Kind known to the targeted cluster.
-It then dumps those all those kinds in to Json files (one file per kind).
-For easier restore, those dumped objects then gets split up by namespace and kind.
+It then dumps all those kinds to Json files (one file per kind).
+For easier restore, those dumped objects then get split up by namespace and kind.
 
 The resulting structure looks like the following:
 
