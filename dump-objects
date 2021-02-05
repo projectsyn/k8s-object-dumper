@@ -252,6 +252,7 @@ fetch_objects() {
       -e "^${errprefix}Unable to list {\".*\" \"v1\" \"${kind}\"}: the server could not find the requested resource\$" \
       -e "^${errprefix}Unable to list \".*/v1, Resource=${kind}\": the server could not find the requested resource\$" \
       -e "^${errprefix}the server doesn't have a resource type \"${kind}\"\$" \
+      -e "^${errprefix}You may not request a new project via this API.\$" \
       <<< "$error"
     then
       return "$EX_PROTOCOL"
