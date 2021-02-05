@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 
-- …
+- Add "You may not request a new project via this API" to potential fetch errors [#9]
 
 ## [v0.1.0] - 2020-10-16
 
@@ -35,3 +35,4 @@ Release as open source code
 [#4]: https://github.com/projectsyn/k8s-object-dumper/pull/4
 [#5]: https://github.com/projectsyn/k8s-object-dumper/pull/5
 [#6]: https://github.com/projectsyn/k8s-object-dumper/pull/6
+[#9]: https://github.com/projectsyn/k8s-object-dumper/pull/9
