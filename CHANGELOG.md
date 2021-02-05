@@ -5,9 +5,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v0.1.1] - 2021-02-08
+
 ### Added
 
 - Add "You may not request a new project via this API" to potential fetch errors [#9]
+
+### Changed
+
+- Updated Docker base image to `debian:10.7-slim`
 
 ## [v0.1.0] - 2020-10-16
 
@@ -27,8 +34,9 @@ Release as open source code
 
 - Droped creation of output directory ([#3])
 
-[Unreleased]: https://github.com/projectsyn/component-k8s-object-dumper/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/projectsyn/component-k8s-object-dumper/compare/v0.1.1...HEAD
 [v0.1.0]: https://github.com/projectsyn/component-k8s-object-dumper/releases/tag/v0.1.0
+[v0.1.1]: https://github.com/projectsyn/component-k8s-object-dumper/releases/tag/v0.1.0
 
 [#1]: https://github.com/projectsyn/k8s-object-dumper/pull/1
 [#3]: https://github.com/projectsyn/k8s-object-dumper/pull/3
