@@ -64,6 +64,10 @@ fi
 # Remove old files
 find "$output_dir" -mindepth 1 -maxdepth 1 -type f -delete
 
+log() {
+  test -n "$DEBUG" && echo "$@" >&2
+}
+
 delay_attempt() {
   local attempt="$1"
   local msg="$2"
@@ -74,7 +78,7 @@ delay_attempt() {
   else
     delay=$(( 1 + ( (1 + attempt) ** 5) ))
   fi
-  echo "Pausing for ${delay} seconds: ${msg}" >&2
+  log "Pausing for ${delay} seconds: ${msg}" >&2
   sleep "$delay" || :
 }
 
@@ -231,7 +235,7 @@ fetch_objects() {
   # Capture stderr
   if error=$(run_kubectl get --all-namespaces --output=json "$kind" 2>&1 >"$destfile" | tee -a /dev/stderr); then
     if objcount=$(jq --raw-output '.items | length' < "$destfile"); then
-      echo "Received ${objcount} ${kind} objects" >&2
+      log "Received ${objcount} ${kind} objects"
       return 0
     fi
   else
@@ -240,7 +244,7 @@ fetch_objects() {
     local errprefix=
 
     if verbose; then
-      echo "Kubernetes client failed with status ${status}" >&2
+      log "Kubernetes client failed with status ${status}"
       errprefix='[^]]+ *[-_a-z0-9]+\.go:[0-9]+] *'
     fi
 
@@ -306,7 +310,7 @@ split_objects() {
   # Remove old files
   find "$splitdir" -mindepth 1 -type f -name '*.json' -delete
 
-  echo "Splitting ${#} JSON files" >&2
+  log "Splitting ${#} JSON files"
 
   if krossa "$splitdir" "$@"; then
     # Remove empty directories
@@ -366,7 +370,7 @@ if ! validate_kinds "${kinds[@]}"; then
   let ++errors
 fi
 
-echo "Fetching resources for ${#kinds[@]} distinct kinds: ${kinds[*]}" >&2
+log "Fetching resources for ${#kinds[@]} distinct kinds: ${kinds[*]}"
 
 declare -i idx=0
 declare -a object_files=()
@@ -376,12 +380,12 @@ for i in "${kinds[@]}"; do
 
   if [[ "$i" == */* ]]; then
     if verbose; then
-      echo "${prefix}Skipping subresource" >&2
+      log "${prefix}Skipping subresource"
     fi
     continue
   fi
 
-  echo "${prefix}Downloading" >&2
+  log "${prefix}Downloading"
 
   if retrievable_kind "$i"; then
     retrievable=yes
@@ -404,7 +408,7 @@ for i in "${kinds[@]}"; do
       echo "Download failed with status ${status} when resource kind \"${i}\" is expected to be retrievable" >&2
       status=1
     else
-      echo "Ignoring error about unretrievable resource kind" >&2
+      log "Ignoring error about unretrievable resource kind"
       status=0
     fi
   elif [[ -z "$retrievable" ]]; then
@@ -437,7 +441,7 @@ if (( errors > 0 )); then
   exit 1
 fi
 
-echo 'K8s backup finished without errors' >&2
+log 'K8s backup finished without errors'
 
 exit 0
 

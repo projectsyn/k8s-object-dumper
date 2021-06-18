@@ -86,6 +86,8 @@ useridentitymappings
 validations
 ```
 
+To enable informative logging output for non-error cases, set `$DEBUG` to a non-empty value.
+
 ## Contributing and license
 
 This library is licensed under [BSD-3-Clause](LICENSE).
