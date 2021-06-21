@@ -17,7 +17,9 @@ RUN apt-get update \
      curl \
   && rm -rf /var/lib/apt/lists/*
 
-RUN curl -sLo /tmp/kubectl "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl" \
+ARG K8S_VERSION=v1.18.20
+
+RUN curl -sLo /tmp/kubectl "https://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}/bin/linux/amd64/kubectl" \
   && chmod +x /tmp/kubectl
 
 RUN curl -sLo /tmp/krossa.tar.gz https://github.com/appuio/krossa/releases/download/v0.0.4/krossa_0.0.4_linux_amd64.tar.gz \
