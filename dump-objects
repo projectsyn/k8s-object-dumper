@@ -32,13 +32,15 @@ usage() {
   echo ' -v  Verbose output'
   echo " -d  Destination directory (default: ${default_output_dir})"
   echo ' -s  Short delays in case of failures'
+  echo ' -D  enable Debug log'
 }
 
 output_dir="$default_output_dir"
 opt_verbose=
+opt_debug=false
 opt_fastretries=
 
-while getopts 'hvd:s' opt; do
+while getopts 'hvd:Ds' opt; do
   case "$opt" in
     h)
       usage
@@ -47,6 +49,7 @@ while getopts 'hvd:s' opt; do
     v) opt_verbose=yes ;;
     d) output_dir="$OPTARG" ;;
     s) opt_fastretries=yes ;;
+    D) opt_debug=true ;;
     *)
       usage >&2
       exit 1
@@ -65,7 +68,9 @@ fi
 find "$output_dir" -mindepth 1 -maxdepth 1 -type f -delete
 
 log() {
-  test -n "$DEBUG" && echo "$@" >&2
+  if [ "$opt_debug" = true ]; then
+    echo "$@" >&2
+  fi
 }
 
 delay_attempt() {
