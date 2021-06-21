@@ -139,7 +139,7 @@ extract_versioned_apis() {
 }
 
 validate_kinds() {
-  local -a expected=( $(< /usr/local/share/k8s-object-dumper/must-exist) )
+  local -a mapfile -t expected < /usr/local/share/k8s-object-dumper/must-exist
   local missing=()
   for j in "${expected[@]}"; do
     local found=
@@ -194,7 +194,8 @@ object_kinds() {
 
   # Get all object types for each group
   for url in "${groups[@]}"; do
-    local san_name=$(sanitize_name <<< "${url##/}")
+    local san_name
+    san_name = $(sanitize_name <<< "${url##/}")
     local name="api-${san_name}.json"
     local fname="${output_dir}/${name}"
 
@@ -213,7 +214,7 @@ object_kinds() {
 #
 #
 retrievable_kind() {
-  local -a known_to_fail=( $(< /usr/local/share/k8s-object-dumper/known-to-fail) )
+  local -a mapfile -t known_to_fail < /usr/local/share/k8s-object-dumper/known-to-fail
 
   for kind in "${known_to_fail[@]}"
   do
@@ -255,7 +256,7 @@ fetch_objects() {
 
     errprefix+='(|Error from server( \([a-zA-Z]+\)|): *|error: *)'
 
-    if egrep -iq \
+    if grep -Eiq \
       -e "^${errprefix}the server does not allow this method on the requested resource\$" \
       -e "^${errprefix}Unable to list \"${kind}\": the server could not find the requested resource\$" \
       -e "^${errprefix}Unable to list {\".*\" \"v1\" \"${kind}\"}: the server could not find the requested resource\$" \
@@ -368,11 +369,11 @@ declare -i errors=0
 
 if (( "${#kinds[@]}" < min_expected_kinds )); then
   echo "Expected at least ${min_expected_kinds} resource kinds" >&2
-  let ++errors
+  (( ++errors )) || true
 fi
 
 if ! validate_kinds "${kinds[@]}"; then
-  let ++errors
+  (( ++errors )) || true
 fi
 
 log "Fetching resources for ${#kinds[@]} distinct kinds: ${kinds[*]}"
@@ -422,21 +423,21 @@ for i in "${kinds[@]}"; do
   fi
 
   if (( status != 0 )); then
-    let ++errors
+    (( ++errors )) || true
   fi
 
   echo >&2
 done
 
 if ! split_objects ${object_files+"${object_files[@]}"}; then
-  let ++errors
+  (( ++errors )) || true
 fi
 
 date > "${output_dir}/timestamp-end.txt"
 
 
 # Output for K8up
-( cd "${output_dir}" && tar czf ${output_dir}/k8s-objects.tar.gz timestamp-*.txt version.* objects-*.json split/ )
+( cd "${output_dir}" && tar czf "${output_dir}/k8s-objects.tar.gz" timestamp-*.txt version.* objects-*.json split/ )
 
 # dump tar to original stdout
 cat "${output_dir}/k8s-objects.tar.gz" >&1
