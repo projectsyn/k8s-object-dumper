@@ -86,7 +86,7 @@ useridentitymappings
 validations
 ```
 
-To enable informative logging output for non-error cases, set `$DEBUG` to a non-empty value.
+To enable informative logging output for non-error cases, set the `-D` argument.
 
 ## Contributing and license
 
