@@ -195,7 +195,7 @@ object_kinds() {
   # Get all object types for each group
   for url in "${groups[@]}"; do
     local san_name
-    san_name = $(sanitize_name <<< "${url##/}")
+    san_name=$(sanitize_name <<< "${url##/}")
     local name="api-${san_name}.json"
     local fname="${output_dir}/${name}"
 
