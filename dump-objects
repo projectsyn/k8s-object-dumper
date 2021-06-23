@@ -428,7 +428,7 @@ for i in "${kinds[@]}"; do
     (( ++errors )) || true
   fi
 
-  echo >&2
+  log >&2
 done
 
 if ! split_objects ${object_files+"${object_files[@]}"}; then
