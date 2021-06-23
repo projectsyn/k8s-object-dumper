@@ -139,7 +139,8 @@ extract_versioned_apis() {
 }
 
 validate_kinds() {
-  local -a mapfile -t expected < /usr/local/share/k8s-object-dumper/must-exist
+  local -a expected
+  mapfile -t expected < /usr/local/share/k8s-object-dumper/must-exist
   local missing=()
   for j in "${expected[@]}"; do
     local found=
@@ -214,7 +215,8 @@ object_kinds() {
 #
 #
 retrievable_kind() {
-  local -a mapfile -t known_to_fail < /usr/local/share/k8s-object-dumper/known-to-fail
+  local -a know_to_fail
+  mapfile -t known_to_fail < /usr/local/share/k8s-object-dumper/known-to-fail
 
   for kind in "${known_to_fail[@]}"
   do
