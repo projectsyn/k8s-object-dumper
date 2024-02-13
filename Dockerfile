@@ -1,4 +1,4 @@
-FROM docker.io/debian:12.2-slim as base
+FROM docker.io/debian:12.5-slim as base
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
