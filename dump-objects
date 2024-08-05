@@ -19,6 +19,9 @@ readonly EX_PROTOCOL=76
 readonly min_expected_kinds=98
 
 default_output_dir=/data/k8s-backup
+# Use kubectl --chunk-size=100 by default to reduce kubectl memory usage when
+# dumping large resource kinds.
+default_chunk_size=100
 
 if ! kubectl=$(type -p kubectl); then
   echo "K8s client \"kubectl\" not found in PATH" >&2
@@ -33,14 +36,16 @@ usage() {
   echo " -d  Destination directory (default: ${default_output_dir})"
   echo ' -s  Short delays in case of failures'
   echo ' -D  enable Debug log'
+  echo " -c  kubectl chunk size (default: ${default_chunk_size})"
 }
 
 output_dir="$default_output_dir"
 opt_verbose=
 opt_debug=false
 opt_fastretries=
+opt_chunk_size="$default_chunk_size"
 
-while getopts 'hvd:Ds' opt; do
+while getopts 'hvd:Dsc:' opt; do
   case "$opt" in
     h)
       usage
@@ -50,6 +55,7 @@ while getopts 'hvd:Ds' opt; do
     d) output_dir="$OPTARG" ;;
     s) opt_fastretries=yes ;;
     D) opt_debug=true ;;
+    c) opt_chunk_size="$OPTARG" ;;
     *)
       usage >&2
       exit 1
@@ -241,7 +247,7 @@ fetch_objects() {
   local error=
 
   # Capture stderr
-  if error=$(run_kubectl get --all-namespaces --output=json "$kind" 2>&1 >"$destfile" | tee -a /dev/stderr); then
+  if error=$(run_kubectl get --all-namespaces --chunk-size="$opt_chunk_size" --output=json "$kind" 2>&1 >"$destfile" | tee -a /dev/stderr); then
     if objcount=$(jq --raw-output '.items | length' < "$destfile"); then
       log "Received ${objcount} ${kind} objects"
       return 0
