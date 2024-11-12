@@ -1,6 +1,14 @@
-tmp/
-log/
-redhat/rpms
+# Goreleaser
+dist/
+.github/release-notes.md
 
-# Data directory used for local testing
-data/
+# Tools
+bin/
+
+# Build
+k8s-object-dumper
+*.out
+
+# Docs
+.cache/
+.public/
