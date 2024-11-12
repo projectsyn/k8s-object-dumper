@@ -19,7 +19,7 @@ import (
 )
 
 type DiscoveryOptions struct {
-	BatchSize int64
+	ChunkSize int64
 	LogWriter io.Writer
 
 	// MustExistResources is a list of resources that must exist in the cluster.
@@ -32,15 +32,15 @@ type DiscoveryOptions struct {
 	IgnoreResources []*regexp.Regexp
 }
 
-// GetBatchSize returns the set batch size for listing objects or the default.
-func (opts DiscoveryOptions) GetBatchSize() int64 {
-	if opts.BatchSize == 0 {
+// GetChunkSize returns the set chunk size for listing objects or the default.
+func (opts DiscoveryOptions) GetChunkSize() int64 {
+	if opts.ChunkSize == 0 {
 		return 500
 	}
-	return opts.BatchSize
+	return opts.ChunkSize
 }
 
-// GetLogWriter returns the set batch size for listing objects or io.Discard as default.
+// GetLogWriter returns the set chunk size for listing objects or io.Discard as default.
 func (opts DiscoveryOptions) GetLogWriter() io.Writer {
 	if opts.LogWriter == nil {
 		return io.Discard
@@ -51,9 +51,9 @@ func (opts DiscoveryOptions) GetLogWriter() io.Writer {
 // DiscoverObjects discovers all objects in the cluster and calls the provided callback for each list of objects.
 // The callback can be called multiple times with the same object kind.
 // Objects are unique in general, but the callback should be able to handle duplicates.
-// Some API servers do not implement list batching correctly and thus might introduce duplicates.
+// Some API servers do not implement list chunking correctly and thus might introduce duplicates.
 func DiscoverObjects(ctx context.Context, conf *rest.Config, cb func(*unstructured.UnstructuredList) error, opts DiscoveryOptions) error {
-	batchSize := opts.GetBatchSize()
+	chunkSize := opts.GetChunkSize()
 	logWriter := opts.GetLogWriter()
 
 	dc, err := discovery.NewDiscoveryClientForConfig(conf)
@@ -112,7 +112,7 @@ func DiscoverObjects(ctx context.Context, conf *rest.Config, cb func(*unstructur
 			continueKey := ""
 			for {
 				l, err := dynClient.Resource(res).List(ctx, metav1.ListOptions{
-					Limit:    batchSize,
+					Limit:    chunkSize,
 					Continue: continueKey,
 				})
 				if err != nil {

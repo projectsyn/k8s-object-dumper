@@ -67,7 +67,7 @@ func Test_DiscoverObjects(t *testing.T) {
 	}
 
 	require.NoError(t, discovery.DiscoverObjects(context.Background(), cfg, objTracker, discovery.DiscoveryOptions{
-		BatchSize: int64(cap(sas) / 2),
+		ChunkSize: int64(cap(sas) / 2),
 		IgnoreResources: []*regexp.Regexp{
 			regexp.MustCompile(`^roles.rbac.authorization.k8s.io$`),
 		},

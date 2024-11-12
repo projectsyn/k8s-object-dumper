@@ -15,12 +15,12 @@ import (
 
 func main() {
 	var dir string
-	var batchSize int64
+	var chunkSize int64
 	mustExistResources := new(repeatableStringFlag)
 	ignoreResources := new(repeatableRegexpFlag)
 
 	flag.StringVar(&dir, "dir", "", "Directory to dump objects into")
-	flag.Int64Var(&batchSize, "batch-size", 500, "Batch size for listing objects")
+	flag.Int64Var(&chunkSize, "chunk-size", 500, "Chunk size for listing objects")
 	flag.Var(mustExistResources, "must-exist", "Resource that must exist in the cluster. Can be used multiple times.")
 	flag.Var(ignoreResources, "ignore", "Resource to ignore during discovery. Regexp, anchored by default. Can be used multiple times.")
 
@@ -47,7 +47,7 @@ func main() {
 	}
 
 	if err := discovery.DiscoverObjects(context.Background(), conf, df, discovery.DiscoveryOptions{
-		BatchSize:          batchSize,
+		ChunkSize:          chunkSize,
 		LogWriter:          os.Stderr,
 		MustExistResources: *mustExistResources,
 		IgnoreResources:    *ignoreResources,
