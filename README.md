@@ -20,7 +20,7 @@ $ k8s-object-dumper
 ### Dump to a directory
 
 ```bash
-$ k8s-object-dumper -d dir
+$ k8s-object-dumper -dir dir
 ```
 
 Will result in the following directory structure:
