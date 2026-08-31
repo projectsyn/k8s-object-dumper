@@ -3,7 +3,7 @@ module github.com/projectsyn/k8s-object-dumper
 go 1.23.2
 
 require (
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.12.1
 	go.uber.org/multierr v1.11.0
 	k8s.io/api v0.31.0
 	k8s.io/apimachinery v0.31.0
@@ -45,6 +45,7 @@ require (
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
+	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc // indirect
 	golang.org/x/net v0.26.0 // indirect
 	golang.org/x/oauth2 v0.21.0 // indirect
